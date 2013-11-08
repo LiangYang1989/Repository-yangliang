@@ -1,0 +1,75 @@
+using System;
+using System.Collections;
+using System.ComponentModel;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using System.Web.Services.Protocols;
+using System.Xml.Linq;
+
+namespace DataSyncWebService
+{
+    /// <summary>
+    /// Service1 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消对下行的注释。
+    // [System.Web.Script.Services.ScriptService]
+    public class Service1 : System.Web.Services.WebService
+    {
+
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+        [WebMethod(Description = "专业数据同步")]
+        public string MajorDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "班级数据同步")]
+        public string SchoolClassDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "学生数据同步")]
+        public string StudentDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "教师数据同步")]
+        public string TeacherDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "学期标识同步")]
+        public string TermTagsDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "课程数据同步")]
+        public string CourseDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "教师任课数据同步")]
+        public string CoursesTeacherRelationDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "选课数据同步")]
+        public string CoursesElectiveDataSynchronize()
+        {
+            return "Success!";
+        }
+        [WebMethod(Description = "作业与实验数据同步")]
+        public string SchoolWorkAndExperimentsDataSynchronize()
+        {
+            return "Success!";
+        }
+    }
+}
