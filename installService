@@ -1,0 +1,226 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Configuration.Install;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Windows.Forms;
+using System.ServiceProcess;
+
+namespace installService
+{
+    public partial class Form1 : Form
+    {
+        private String p_ServicePath = String.Empty;
+        private String p_ServiceName = String.Empty;
+        public Form1()
+        {
+            InitializeComponent();
+            ServiceController[] _ServiceList = ServiceController.GetServices();
+            for (int i = 0; i != _ServiceList.Length; i++)
+            {
+                comboBox1.Items.Add(_ServiceList[i].ServiceName);
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog fileDialog1 = new OpenFileDialog();
+            fileDialog1.InitialDirectory = "d://";
+            fileDialog1.Filter = "exe files (*.exe)|*.exe|All files (*.*)|*.*";
+            fileDialog1.FilterIndex = 1;
+            fileDialog1.RestoreDirectory = true;
+            if (fileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                p_ServicePath = fileDialog1.FileName;
+                textBox1.Text = fileDialog1.FileName.Substring(fileDialog1.FileName.LastIndexOf('\\') + 1, (fileDialog1.FileName.Length - fileDialog1.FileName.LastIndexOf('\\') -5 ));
+            }
+            else
+            {
+                textBox1.Text = "";
+            }  
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {            
+            if (textBox1.Text != null && textBox1.Text.Trim()!="")
+            {
+                InsertService(p_ServicePath, ref p_ServiceName);
+                label1.Text = p_ServiceName+"服务安装成功！";
+                ServiceController[] _ServiceList = ServiceController.GetServices();
+                for (int i = 0; i != _ServiceList.Length; i++)
+                {
+                    comboBox1.Items.Add(_ServiceList[i].ServiceName);
+                }
+                comboBox1.Text = p_ServiceName;
+                    
+            }
+            else
+                label1.Text = "请先选择要安装的服务！";
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (textBox1.Text != null && textBox1.Text.Trim() != "")
+            {
+                UnInsertService(p_ServicePath);
+                label1.Text = p_ServiceName;
+            }
+            else
+                label1.Text = "请先选择要卸载的服务！";
+
+        }
+
+
+        private void getService()
+        {
+        }
+        private string InsertService(string p_Path, ref string p_ServiceName)
+        {
+
+            if (!File.Exists(p_Path))
+            {
+                p_ServiceName = "文件不存在！";
+                return p_ServiceName;
+            }
+            
+            p_ServiceName = "";
+
+            FileInfo _InsertFile = new FileInfo(p_Path);
+
+            IDictionary _SavedState = new Hashtable();
+
+            try
+            {
+
+                AssemblyInstaller _AssemblyInstaller = new AssemblyInstaller(p_Path, new string[] { "/LogFile=" + _InsertFile.DirectoryName + "\\" + _InsertFile.Name.Substring(0, _InsertFile.Name.Length - _InsertFile.Extension.Length) + ".log" });
+
+                _AssemblyInstaller.UseNewContext = true;
+
+                _AssemblyInstaller.Install(_SavedState);
+
+                _AssemblyInstaller.Commit(_SavedState);
+
+                Type[] _TypeList = _AssemblyInstaller.Assembly.GetTypes();
+
+                for (int i = 0; i != _TypeList.Length; i++)
+                {
+
+                    if (_TypeList[i].BaseType.FullName == "System.Configuration.Install.Installer")
+                    {
+
+                        object _InsertObject = System.Activator.CreateInstance(_TypeList[i]);
+
+                        FieldInfo[] _FieldList = _TypeList[i].GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        for (int z = 0; z != _FieldList.Length; z++)
+                        {
+
+                            if (_FieldList[z].FieldType.FullName == "System.ServiceProcess.ServiceInstaller")
+                            {
+
+                                object _ServiceInsert = _FieldList[z].GetValue(_InsertObject);
+
+                                if (_ServiceInsert != null)
+                                {
+
+                                    p_ServiceName = ((ServiceInstaller)_ServiceInsert).ServiceName;
+
+                                    return "";
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                return "";
+
+            }
+
+            catch (Exception ex)
+            {
+                p_ServiceName = ex.Message;
+                return ex.Message;
+
+            }
+
+        }
+
+        private string UnInsertService(string p_Path)
+        {
+
+            if (!File.Exists(p_Path))
+            {
+                p_ServiceName = "文件不存在！";
+                return p_ServiceName;
+            }
+
+            FileInfo _InsertFile = new FileInfo(p_Path);
+
+            IDictionary _SavedState = new Hashtable();
+
+            try
+            {
+
+                AssemblyInstaller _AssemblyInstaller = new AssemblyInstaller(p_Path, new string[] { "/LogFile=" + _InsertFile.DirectoryName + "\\" + _InsertFile.Name.Substring(0, _InsertFile.Name.Length - _InsertFile.Extension.Length) + ".log" });
+
+                _AssemblyInstaller.UseNewContext = true;
+
+                _AssemblyInstaller.Uninstall(_SavedState);
+
+                p_ServiceName = "卸载成功！";
+
+                _AssemblyInstaller.Commit(_SavedState);
+                
+
+                return "";
+
+            }
+
+            catch (Exception ex)
+            {
+                //p_ServiceName = ex.Message;
+                return ex.Message;
+
+            }
+
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            ServiceController[] _ServiceList = System.ServiceProcess.ServiceController.GetServices();
+            for (int i = 0; i < _ServiceList.Length; i++)
+            {
+                if (_ServiceList[i].ServiceName.Trim() == comboBox1.Text.Trim())
+                {
+                    _ServiceList[i].Start(); //启动服务
+                    break;
+                }
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            ServiceController[] _ServiceList = System.ServiceProcess.ServiceController.GetServices();
+            for (int i = 0; i < _ServiceList.Length; i++)
+            {
+                if (_ServiceList[i].ServiceName.Trim() == comboBox1.Text.Trim())
+                {
+                    bool stopYN = _ServiceList[i].CanStop; //判断服务是否可以停止
+                    if (stopYN)
+                        _ServiceList[i].Stop();//停止服务
+                    break;
+                }
+            }
+        }
+    }
+}
+
